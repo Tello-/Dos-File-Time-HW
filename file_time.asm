@@ -79,7 +79,7 @@ main ENDP
 
 
 ;**********************************************************************
-	ShowFileTime PROC USES eax edx
+	ShowFileTime PROC USES edx
 	;Description:	receives a binary file time value in the AX register and displays the time in hh:mm:ss format
 	;Receives:		ax register with binary value
 	;Returns:		None
