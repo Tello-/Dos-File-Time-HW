@@ -1,6 +1,6 @@
 TITLE  Chapter 7, Dos_file_time (file_time.asm)
 
-; Program:     Chapter 7, DOS_file_time
+; Program:     Chapter 7, DOS_file_time , (Refined after crtique)
 ; Description: Program to display file time format
 ; Student:     Josh Lollis
 ; Date:        03/20/2020
@@ -47,18 +47,21 @@ main ENDP
 
 
 ;**********************************************************************
-	Check_Zero_To_Print PROC USES eax ecx edx
+	Print_With_Zero_Pad PROC USES eax ecx edx
 	;Description:	Checks if a zero is needed to pad time format
 	;Receives:		none
 	;Returns:		nothing
 ;**********************************************************************
-		.IF dl < 10
-			movzx ecx, al 
-			mov al, '0'
-			call WriteChar
-		.ENDIF
+		cmp dl, 10
+		jae next
+		movzx ecx, al 
+		mov al, '0'
+		call WriteChar
+		next:
+			movzx eax, dl
+			call WriteDec
 		ret
-	Check_Zero_To_Print ENDP
+	Print_With_Zero_Pad ENDP
 ;**********************************************************************		
 		
 
@@ -84,69 +87,23 @@ main ENDP
 		mov edx, OFFSET file_time_result
 		call WriteString
 
-
-		;:::::::::: Attain Hours ::::::::::::::::::::::::::::::::::::::::::::::::::::::
-		;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::		
+		;:::::::::: Attain Hours ::::::::::::::::::::::::::::::::::::::::::::::::::::::		
 		call Extract_Hour ; loads dl with binary value of target bit segment of hours
-		push eax ; preserve bit segment for more register use
-
-		;*** Add Leading Zeroes if needed *****
-		call Check_Zero_To_Print
-		;***************************************
-		
-		;*** Print binary value to console as Dec
-		movzx eax, dl
-		call WriteDec
-		call Print_Colon
-		;****************************************
-		pop eax ; restore eax with bit segment for next extraction
-		;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-		;::::::::::::End of Attaining Hours:::::::::::::::::::::::::::::::::::::::::::::::::
-		
+		call Print_With_Zero_Pad
+		call Print_Colon		
+		;::::::::::::End of Attaining Hours:::::::::::::::::::::::::::::::::::::::::::::::::		
 		
 
-		;:::::::::: Attain Minutes::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-		;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-		call Extract_Minute ; loads dl with binary value of minutes shifted all the way left
-		push eax ; preserve bit segment for more register use
-
-		;*** Add Leading Zeroes if needed *****
-		.IF dl < 10
-			movzx ecx, al 
-			mov al, '0'
-			call WriteChar
-		.ENDIF
-		;***************************************
-		
-		;*** Print binary value to console as Dec
-		movzx eax, dl
-		call WriteDec
-		call Print_Colon
-		;****************************************
-		pop eax ; restore eax with bit segment for next extraction
-		;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+		;:::::::::: Attain Minutes::::::::::::::::::::::::::::::::::::::::::::::::::::::::::		
+		call Extract_Minute ; loads dl with binary value of target bit segment of minutes
+		call Print_With_Zero_Pad
+		call Print_Colon		
 		;::::::::::::End of Attaining Minutes:::::::::::::::::::::::::::::::::::::::::::::::
 
 
-		;:::::::::: Attain Seconds::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-		;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-		call Extract_Second ; loads dl with binary value of minutes shifted all the way left
-		push eax ; preserve bit segment for more register use
-
-		;*** Add Leading Zeroes if needed *****
-		.IF dl < 10
-			movzx ecx, al 
-			mov al, '0'
-			call WriteChar
-		.ENDIF
-		;***************************************
-		
-		;*** Print binary value to console as Dec
-		movzx eax, dl
-		call WriteDec
-		;****************************************
-		pop eax ; restore eax with bit segment for next extraction
-		;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+		;:::::::::: Attain Seconds::::::::::::::::::::::::::::::::::::::::::::::::::::::::::		
+		call Extract_Second ; loads dl with binary value of target bit segment of seconds
+		call Print_With_Zero_Pad		
 		;::::::::::::End of Attaining Seconds::::::::::::::::::::::::::::::::::::::::::::::::		
 		
 		call Crlf
@@ -161,8 +118,7 @@ main ENDP
 	;Description:	receives a binary file time value in the AX register and parses out the hours value
 	;Receives:		ax register with binary time value
 	;Returns:		dl register with binary hour value
-;**********************************************************************
-		
+;**********************************************************************		
 		movzx edx, ax
 		shr dx, hour_offset
 		ret
@@ -174,8 +130,7 @@ main ENDP
 	;Description:	receives a binary file time value in the AX register and parses out the min value
 	;Receives:		ax register with binary time value
 	;Returns:		dl register with binary minute value
-;**********************************************************************
-		
+;**********************************************************************		
 		movzx edx, ax
 		shl dx, minute_offset_left
 		shr dx, minute_offset_right
@@ -188,17 +143,13 @@ main ENDP
 	;Description:	receives a binary file time value in the AX register and parses out the seconds value
 	;Receives:		ax register with binary time value
 	;Returns:		dl register with binary second value
-;**********************************************************************
-		
+;**********************************************************************		
 		movzx edx, ax
 		shl dx, second_offset_left
 		shr dx, second_offset_right 
 		ret
 	Extract_Second ENDP
 ;**********************************************************************
-
-
-
 
 END main
 
