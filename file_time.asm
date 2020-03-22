@@ -26,8 +26,20 @@ file_time_result BYTE "Your DOS file time is: ", 0
 .code
 main PROC
 
-	call Prompt_Input
-	call Print_Bin_Equivalent
+; Prompt for input::::::::::::::::::::::
+	mov edx, OFFSET prompt
+	call WriteString
+	call ReadHex
+; ::::::::::::::::::::::::::::::::::::::
+
+; Write Binary Equivalent:::::::::::::::
+	mov edx, OFFSET binary_result
+	call WriteString
+	mov ebx, 2
+	call WriteBinB
+	call Crlf
+; :::::::::::::::::::::::::::::::::::::
+
 	call ShowFileTime
 
 	exit
@@ -35,48 +47,20 @@ main ENDP
 
 
 ;**********************************************************************
-	Prompt_Input PROC USES edx
-	;Description:	asks client for 4 digit hex and loads its into ax
+	Check_Zero_To_Print PROC USES eax ecx edx
+	;Description:	Checks if a zero is needed to pad time format
 	;Receives:		none
-	;Returns:		ax containing hex value
-;**********************************************************************
-		mov edx, OFFSET prompt
-		call WriteString
-		call ReadHex
-		ret
-	Prompt_Input ENDP
-;**********************************************************************
-
-
-;**********************************************************************
-	Print_Bin_Equivalent PROC USES ebx edx
-	;Description:	Prints 16 bit Bin value for client given hex
-	;Receives:		eax number to write
-	;Returns:		nothing 
-;**********************************************************************
-		mov edx, OFFSET binary_result
-		call WriteString
-		mov ebx, 2
-		call WriteBinB
-		call Crlf
-		ret
-	Print_Bin_Equivalent ENDP
-;**********************************************************************
-
-;**********************************************************************
-	Print_Zeroes PROC USES eax ecx
-	;Description:	Prints Bin value for client given hex
-	;Receives:		al number of zeroes to write
 	;Returns:		nothing
 ;**********************************************************************
-		movzx ecx, al 
-		mov al, '0'
-		L1:		
+		.IF dl < 10
+			movzx ecx, al 
+			mov al, '0'
 			call WriteChar
-		loop L1
+		.ENDIF
 		ret
-	Print_Zeroes ENDP
-;**********************************************************************
+	Check_Zero_To_Print ENDP
+;**********************************************************************		
+		
 
 ;**********************************************************************
 	Print_Colon PROC USES eax
@@ -107,10 +91,7 @@ main ENDP
 		push eax ; preserve bit segment for more register use
 
 		;*** Add Leading Zeroes if needed *****
-		.IF dl < 10
-			mov eax, 01h
-			call Print_Zeroes
-		.ENDIF
+		call Check_Zero_To_Print
 		;***************************************
 		
 		;*** Print binary value to console as Dec
@@ -131,8 +112,9 @@ main ENDP
 
 		;*** Add Leading Zeroes if needed *****
 		.IF dl < 10
-			mov eax, 01h
-			call Print_Zeroes
+			movzx ecx, al 
+			mov al, '0'
+			call WriteChar
 		.ENDIF
 		;***************************************
 		
@@ -153,8 +135,9 @@ main ENDP
 
 		;*** Add Leading Zeroes if needed *****
 		.IF dl < 10
-			mov eax, 01h
-			call Print_Zeroes
+			movzx ecx, al 
+			mov al, '0'
+			call WriteChar
 		.ENDIF
 		;***************************************
 		
